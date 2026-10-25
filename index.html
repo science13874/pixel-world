@@ -1,111 +1,265 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111827">
   <title>Pixel World</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
+      padding: 20px 12px;
       background: #111827;
       color: #f9fafb;
       font-family: Arial, sans-serif;
       text-align: center;
     }
-    header { padding: 32px 16px 20px; }
-    h1 { margin: 0 0 10px; font-size: 36px; }
-    header p { color: #cbd5e1; margin: 0; }
-    main { max-width: 760px; margin: 0 auto; padding: 16px; }
-    .status {
-      display: inline-block;
-      margin: 12px 0 20px;
-      padding: 8px 14px;
+    h1 { margin: 10px 0; font-size: 34px; }
+    .muted { color: #cbd5e1; }
+    main { max-width: 760px; margin: auto; }
+    .panel {
+      margin: 18px auto;
+      padding: 16px;
       background: #1f2937;
-      border-radius: 20px;
-      color: #a7f3d0;
-      font-size: 14px;
+      border-radius: 12px;
     }
-    .board {
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #status { margin: 12px; color: #a7f3d0; }
+    #board {
+      display: block;
       width: 100%;
-      aspect-ratio: 1;
       max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      border: 3px solid #374151;
-      border-radius: 4px;
-      display: grid;
-      place-items: center;
-      color: #374151;
-      padding: 20px;
+      height: auto;
+      margin: 16px auto;
+      background: white;
+      border: 3px solid #64748b;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      touch-action: manipulation;
     }
-    .board p { line-height: 1.7; }
-    .palette {
+    #palette {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px auto;
-      max-width: 500px;
+      gap: 8px;
+      margin: 18px auto;
     }
     .swatch {
-      width: 32px;
-      height: 32px;
-      border: 2px solid #6b7280;
-      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 2px solid #64748b;
     }
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 20px;
-      background: #2563eb;
-      color: white;
-      font-size: 15px;
-    }
-    footer { padding: 24px; color: #9ca3af; font-size: 13px; }
+    .swatch.selected { outline: 3px solid white; outline-offset: 2px; }
+    footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
   </style>
 </head>
 <body>
   <header>
     <h1>🌍 Pixel World</h1>
-    <p>One world. One million pixels. Made by everyone.</p>
-    <div class="status">The world is waiting for its first pixel!</div>
+    <p class="muted">One world. One million pixels. Made by everyone.</p>
   </header>
 
   <main>
-    <div class="board">
-      <p>
-        <strong>Your shared world starts here.</strong><br>
-        1000 × 1000 pixels<br>
-        16 colors · One pixel every 60 seconds
-      </p>
-    </div>
+    <section class="panel">
+      <p id="status">Firebase 연결을 준비하고 있습니다...</p>
+      <button id="loginBtn">Google 로그인</button>
+      <button id="logoutBtn" hidden>로그아웃</button>
+      <p id="account" class="muted"></p>
+      <p class="muted">한 계정당 60초에 한 번씩 픽셀을 놓을 수 있습니다.</p>
+    </section>
 
-    <div class="palette" aria-label="Pixel color palette">
-      <span class="swatch" style="background:#FFFFFF"></span>
-      <span class="swatch" style="background:#000000"></span>
-      <span class="swatch" style="background:#E5243B"></span>
-      <span class="swatch" style="background:#0052A4"></span>
-      <span class="swatch" style="background:#F9D616"></span>
-      <span class="swatch" style="background:#00843D"></span>
-      <span class="swatch" style="background:#FF7900"></span>
-      <span class="swatch" style="background:#6A1B9A"></span>
-      <span class="swatch" style="background:#009B9B"></span>
-      <span class="swatch" style="background:#8B4513"></span>
-      <span class="swatch" style="background:#F4A7BB"></span>
-      <span class="swatch" style="background:#8C8C8C"></span>
-      <span class="swatch" style="background:#7FA9D8"></span>
-      <span class="swatch" style="background:#90D65A"></span>
-      <span class="swatch" style="background:#B5121B"></span>
-      <span class="swatch" style="background:#123B2A"></span>
-    </div>
-
-    <button type="button" disabled>Pixel placement coming soon</button>
+    <div id="palette" aria-label="16가지 색상"></div>
+    <canvas id="board" width="1000" height="1000"
+      aria-label="1000 곱하기 1000 픽셀 캔버스"></canvas>
+    <p class="muted">색상을 고른 뒤 캔버스를 클릭하세요.</p>
+    <p id="message" role="status"></p>
   </main>
 
   <footer>Pixel World · A canvas created by everyone</footer>
+
+  <script type="module">
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup,
+      signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, getDoc, setDoc,
+      onSnapshot, query, limit, serverTimestamp, runTransaction
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAb6gmhkX19G1EYV0rtcRYfV_mc5rTQQ9U",
+      authDomain: "pixelworld13874.firebaseapp.com",
+      projectId: "pixelworld13874",
+      storageBucket: "pixelworld13874.firebasestorage.app",
+      messagingSenderId: "1017097020793",
+      appId: "1:1017097020793:web:2feb7185c3648ce2657ba8",
+      measurementId: "G-LS6C26D6LQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const canvas = document.getElementById("board");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+    const messageEl = document.getElementById("message");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const accountEl = document.getElementById("account");
+
+    const colors = [
+      "#FFFFFF", "#000000", "#E5243B", "#0052A4",
+      "#F9D616", "#00843D", "#FF7900", "#6A1B9A",
+      "#009B9B", "#8B4513", "#F4A7BB", "#8C8C8C",
+      "#7FA9D8", "#90D65A", "#B5121B", "#123B2A"
+    ];
+
+    let selectedColor = colors[2];
+    let currentUser = null;
+    let lastPlacedAt = 0;
+    const pixelMap = new Map();
+
+    function drawBoard() {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, 1000, 1000);
+      for (const pixel of pixelMap.values()) {
+        ctx.fillStyle = pixel.color;
+        ctx.fillRect(pixel.x, pixel.y, 1, 1);
+      }
+    }
+
+    function showMessage(text) {
+      messageEl.textContent = text;
+    }
+
+    function buildPalette() {
+      const palette = document.getElementById("palette");
+      colors.forEach((color) => {
+        const button = document.createElement("button");
+        button.className = "swatch";
+        button.style.background = color;
+        button.title = color;
+        button.setAttribute("aria-label", color);
+        if (color === selectedColor) button.classList.add("selected");
+
+        button.addEventListener("click", () => {
+          selectedColor = color;
+          palette.querySelectorAll("button").forEach((item) => {
+            item.classList.toggle("selected", item === button);
+          });
+        });
+        palette.appendChild(button);
+      });
+    }
+
+    buildPalette();
+    drawBoard();
+
+    loginBtn.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        showMessage("로그인 실패: " + error.message);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        showMessage("로그아웃 실패: " + error.message);
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      loginBtn.hidden = !!user;
+      logoutBtn.hidden = !user;
+      accountEl.textContent = user ? user.email : "로그인하지 않은 상태";
+      statusEl.textContent = user
+        ? "로그인 완료! 원하는 위치에 픽셀을 놓아 보세요."
+        : "캔버스는 누구나 볼 수 있습니다. 픽셀을 놓으려면 로그인하세요.";
+    });
+
+    const pixelsQuery = query(collection(db, "pixels"), limit(10000));
+    onSnapshot(pixelsQuery, (snapshot) => {
+      pixelMap.clear();
+      snapshot.forEach((item) => {
+        const pixel = item.data();
+        if (
+          Number.isInteger(pixel.x) && pixel.x >= 0 && pixel.x < 1000 &&
+          Number.isInteger(pixel.y) && pixel.y >= 0 && pixel.y < 1000 &&
+          colors.includes(pixel.color)
+        ) {
+          pixelMap.set(item.id, pixel);
+        }
+      });
+      drawBoard();
+    }, (error) => {
+      statusEl.textContent = "픽셀 데이터를 읽을 수 없습니다. Firebase 규칙을 확인하세요.";
+      console.error(error);
+    });
+
+    canvas.addEventListener("click", async (event) => {
+      if (!currentUser) {
+        showMessage("먼저 Google 로그인을 해 주세요.");
+        return;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((event.clientX - rect.left) / rect.width * 1000);
+      const y = Math.floor((event.clientY - rect.top) / rect.height * 1000);
+      if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
+
+      const pixelRef = doc(db, "pixels", `${x}_${y}`);
+      const cooldownRef = doc(db, "cooldowns", currentUser.uid);
+      showMessage("픽셀을 저장하는 중...");
+
+      try {
+        await runTransaction(db, async (transaction) => {
+          const cooldownSnap = await transaction.get(cooldownRef);
+          const previousTime = cooldownSnap.exists()
+            ? cooldownSnap.data().lastPlacedAt?.toMillis?.() || 0
+            : 0;
+
+          if (Date.now() - previousTime < 60000) {
+            throw new Error("아직 60초가 지나지 않았습니다.");
+          }
+
+          transaction.set(cooldownRef, {
+            lastPlacedAt: serverTimestamp()
+          });
+
+          transaction.set(pixelRef, {
+            x, y, color: selectedColor,
+            uid: currentUser.uid,
+            updatedAt: serverTimestamp()
+          });
+        });
+        lastPlacedAt = Date.now();
+        showMessage("픽셀을 저장했어요!");
+      } catch (error) {
+        console.error(error);
+        showMessage(error.message || "저장에 실패했습니다. Firebase 보안 규칙을 확인하세요.");
+      }
+    });
+  </script>
 </body>
 </html>
