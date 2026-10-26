@@ -225,9 +225,18 @@
       }
 
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((event.clientX - rect.left) / rect.width * 1000);
-      const y = Math.floor((event.clientY - rect.top) / rect.height * 1000);
-      if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
+
+const scaleX = canvas.width / rect.width;
+const scaleY = canvas.height / rect.height;
+
+const x = Math.floor(
+  (event.clientX - rect.left - canvas.clientLeft) * scaleX
+);
+const y = Math.floor(
+  (event.clientY - rect.top - canvas.clientTop) * scaleY
+);
+
+if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
 
       const pixelRef = doc(db, "pixels", `${x}_${y}`);
       const cooldownRef = doc(db, "cooldowns", currentUser.uid);
