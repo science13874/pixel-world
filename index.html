@@ -6,91 +6,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111827">
   <title>Pixel World</title>
- 
-* { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  padding: 20px 12px;
-  background: #111827;
-  color: #f9fafb;
-  font-family: Arial, sans-serif;
-  text-align: center;
-}
+  <style>
+    * { box-sizing: border-box; }
 
-h1 { margin: 10px 0; font-size: 34px; }
-.muted { color: #cbd5e1; }
-main { max-width: 760px; margin: auto; }
-
-.panel {
-  margin: 18px auto;
-  padding: 16px;
-  background: #1f2937;
-  border-radius: 12px;
-}
-
-button {
-  border: 0;
-  border-radius: 8px;
-  padding: 11px 16px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-button:disabled { opacity: .5; cursor: not-allowed; }
-#status { margin: 12px; color: #a7f3d0; }
-
-#canvasViewport {
-  width: 100%;
-  max-width: 600px;
-  height: 600px;
-  margin: 16px auto;
-  overflow: auto;
-  background: #374151;
-  border: 2px solid #64748b;
-}
-
-#board {
-  display: block;
-  width: 1000px;
-  height: 1000px;
-  max-width: none;
-  margin: 0;
-  background: white;
-  image-rendering: pixelated;
-  cursor: crosshair;
-  touch-action: none;
-}
-
-#palette {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 18px auto;
-}
-
-.swatch {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 2px solid #64748b;
-}
-
-.swatch.selected { outline: 3px solid white; outline-offset: 2px; }
-footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
+    body {
+      margin: 0;
+      padding: 20px 12px;
+      background: #111827;
+      color: #f9fafb;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
 
     h1 { margin: 10px 0; font-size: 34px; }
     .muted { color: #cbd5e1; }
     main { max-width: 760px; margin: auto; }
+
     .panel {
       margin: 18px auto;
       padding: 16px;
       background: #1f2937;
       border-radius: 12px;
     }
+
     button {
       border: 0;
       border-radius: 8px;
@@ -100,20 +39,19 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
       cursor: pointer;
       font-size: 15px;
     }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    #status { margin: 12px; color: #a7f3d0; }
-    #board {
-      display: block;
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      margin: 16px auto;
-      background: white;
-      border: 3px solid #64748b;
-      image-rendering: pixelated;
-      cursor: crosshair;
-      touch-action: manipulation;
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
     }
+
+    #status { margin: 12px; color: #a7f3d0; }
+
+    #cooldownNotice {
+      margin: 12px;
+      color: #cbd5e1;
+    }
+
     #palette {
       display: flex;
       justify-content: center;
@@ -121,16 +59,71 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
       gap: 8px;
       margin: 18px auto;
     }
+
     .swatch {
       width: 34px;
       height: 34px;
       padding: 0;
       border: 2px solid #64748b;
     }
-    .swatch.selected { outline: 3px solid white; outline-offset: 2px; }
-    footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
+
+    .swatch.selected {
+      outline: 3px solid white;
+      outline-offset: 2px;
+    }
+
+    #zoomControls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 12px auto;
+    }
+
+    #zoomLevel {
+      min-width: 65px;
+      color: #e5e7eb;
+    }
+
+    #canvasViewport {
+      width: 100%;
+      max-width: 600px;
+      height: min(600px, 70vh);
+      min-height: 250px;
+      margin: 16px auto;
+      overflow: auto;
+      background: #374151;
+      border: 2px solid #64748b;
+      overscroll-behavior: contain;
+    }
+
+    #board {
+      display: block;
+      width: 596px;
+      height: 596px;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: white;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      touch-action: manipulation;
+    }
+
+    #message {
+      min-height: 24px;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      margin: 24px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
   </style>
 </head>
+
 <body>
   <header>
     <h1>🌍 Pixel World</h1>
@@ -143,14 +136,28 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
       <button id="loginBtn">Google 로그인</button>
       <button id="logoutBtn" hidden>로그아웃</button>
       <p id="account" class="muted"></p>
-      <p id="cooldownNotice" class="muted">한 계정당 60초에 한 번씩 픽셀을 놓을 수 있습니다.</p>
+      <p id="cooldownNotice">
+        한 계정당 60초에 한 번씩 픽셀을 놓을 수 있습니다.
+      </p>
     </section>
 
     <div id="palette" aria-label="16가지 색상"></div>
+
+    <div id="zoomControls">
+      <button id="zoomOut" type="button">−</button>
+      <span id="zoomLevel">100%</span>
+      <button id="zoomIn" type="button">＋</button>
+      <button id="resetZoom" type="button">초기화</button>
+    </div>
+
+    <p class="muted">마우스 휠로 확대·축소할 수 있습니다.</p>
+    <p class="muted">확대한 화면은 아래쪽과 오른쪽으로 이동할 수 있습니다.</p>
+
     <div id="canvasViewport">
-  <canvas id="board" width="1000" height="1000"
-    aria-label="1000 곱하기 1000 픽셀 캔버스"></canvas>
-</div>
+      <canvas id="board" width="1000" height="1000"
+        aria-label="1000 곱하기 1000 픽셀 캔버스"></canvas>
+    </div>
+
     <p class="muted">색상을 고른 뒤 캔버스를 클릭하세요.</p>
     <p id="message" role="status"></p>
   </main>
@@ -160,13 +167,24 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
   <script type="module">
     import { initializeApp }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
     import {
-      getAuth, GoogleAuthProvider, signInWithPopup,
-      signOut, onAuthStateChanged
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
     import {
-      getFirestore, collection, doc, getDoc, setDoc,
-      onSnapshot, query, limit, serverTimestamp, runTransaction
+      getFirestore,
+      collection,
+      doc,
+      onSnapshot,
+      query,
+      limit,
+      serverTimestamp,
+      runTransaction
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -186,40 +204,15 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
 
     const canvas = document.getElementById("board");
     const ctx = canvas.getContext("2d");
+    const canvasViewport = document.getElementById("canvasViewport");
 
-const canvasViewport = document.getElementById("canvasViewport");
-
-let zoom = 1;
-
-canvasViewport.addEventListener("wheel", (event) => {
-  event.preventDefault();
-
-  const oldZoom = zoom;
-  const factor = event.deltaY < 0 ? 1.25 : 0.8;
-  zoom = Math.max(1, Math.min(16, zoom * factor));
-
-  if (zoom === oldZoom) return;
-
-  const rect = canvasViewport.getBoundingClientRect();
-  const mouseX = event.clientX - rect.left + canvasViewport.scrollLeft;
-  const mouseY = event.clientY - rect.top + canvasViewport.scrollTop;
-
-  const pointX = mouseX / oldZoom;
-  const pointY = mouseY / oldZoom;
-
-  canvas.style.width = `${1000 * zoom}px`;
-  canvas.style.height = `${1000 * zoom}px`;
-
-  canvasViewport.scrollLeft = pointX * zoom - (event.clientX - rect.left);
-  canvasViewport.scrollTop = pointY * zoom - (event.clientY - rect.top);
-}, { passive: false });
-    
     const statusEl = document.getElementById("status");
     const messageEl = document.getElementById("message");
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const accountEl = document.getElementById("account");
     const cooldownNotice = document.getElementById("cooldownNotice");
+    const zoomLevel = document.getElementById("zoomLevel");
 
     const colors = [
       "#FFFFFF", "#000000", "#E5243B", "#0052A4",
@@ -230,12 +223,86 @@ canvasViewport.addEventListener("wheel", (event) => {
 
     let selectedColor = colors[2];
     let currentUser = null;
-    let lastPlacedAt = 0;
     const pixelMap = new Map();
+
+    // 캔버스의 실제 좌표는 항상 1000 × 1000으로 유지합니다.
+    let zoom = Math.min(
+      canvasViewport.clientWidth / canvas.width,
+      1
+    );
+
+    function applyZoom(anchorX = null, anchorY = null) {
+      const oldWidth = canvas.getBoundingClientRect().width;
+      const oldHeight = canvas.getBoundingClientRect().height;
+
+      let pointX = null;
+      let pointY = null;
+
+      if (anchorX !== null && oldWidth > 0 && oldHeight > 0) {
+        pointX = (canvasViewport.scrollLeft + anchorX) / oldWidth;
+        pointY = (canvasViewport.scrollTop + anchorY) / oldHeight;
+      }
+
+      canvas.style.width = `${canvas.width * zoom}px`;
+      canvas.style.height = `${canvas.height * zoom}px`;
+
+      zoomLevel.textContent = `${Math.round(zoom * 100)}%`;
+
+      if (pointX !== null) {
+        canvasViewport.scrollLeft =
+          pointX * canvas.getBoundingClientRect().width - anchorX;
+        canvasViewport.scrollTop =
+          pointY * canvas.getBoundingClientRect().height - anchorY;
+      }
+    }
+
+    function changeZoom(nextZoom, anchorX = null, anchorY = null) {
+      const minZoom = Math.min(
+        canvasViewport.clientWidth / canvas.width,
+        1
+      );
+
+      zoom = Math.max(minZoom, Math.min(16, nextZoom));
+      applyZoom(anchorX, anchorY);
+    }
+
+    canvasViewport.addEventListener("wheel", (event) => {
+      event.preventDefault();
+
+      const rect = canvasViewport.getBoundingClientRect();
+      const anchorX = event.clientX - rect.left - canvasViewport.clientLeft;
+      const anchorY = event.clientY - rect.top - canvasViewport.clientTop;
+
+      const factor = event.deltaY < 0 ? 1.25 : 0.8;
+
+      changeZoom(zoom * factor, anchorX, anchorY);
+    }, { passive: false });
+
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      changeZoom(zoom * 1.5);
+    });
+
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      changeZoom(zoom / 1.5);
+    });
+
+    document.getElementById("resetZoom").addEventListener("click", () => {
+      changeZoom(Math.min(canvasViewport.clientWidth / canvas.width, 1));
+      canvasViewport.scrollLeft = 0;
+      canvasViewport.scrollTop = 0;
+    });
+
+    window.addEventListener("resize", () => {
+      if (zoom < 1) {
+        zoom = Math.min(canvasViewport.clientWidth / canvas.width, 1);
+        applyZoom();
+      }
+    });
 
     function drawBoard() {
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, 1000, 1000);
+
       for (const pixel of pixelMap.values()) {
         ctx.fillStyle = pixel.color;
         ctx.fillRect(pixel.x, pixel.y, 1, 1);
@@ -248,25 +315,32 @@ canvasViewport.addEventListener("wheel", (event) => {
 
     function buildPalette() {
       const palette = document.getElementById("palette");
+
       colors.forEach((color) => {
         const button = document.createElement("button");
         button.className = "swatch";
         button.style.background = color;
         button.title = color;
         button.setAttribute("aria-label", color);
-        if (color === selectedColor) button.classList.add("selected");
+
+        if (color === selectedColor) {
+          button.classList.add("selected");
+        }
 
         button.addEventListener("click", () => {
           selectedColor = color;
+
           palette.querySelectorAll("button").forEach((item) => {
             item.classList.toggle("selected", item === button);
           });
         });
+
         palette.appendChild(button);
       });
     }
 
     buildPalette();
+    applyZoom();
     drawBoard();
 
     loginBtn.addEventListener("click", async () => {
@@ -289,28 +363,39 @@ canvasViewport.addEventListener("wheel", (event) => {
       currentUser = user;
       loginBtn.hidden = !!user;
       logoutBtn.hidden = !user;
-      accountEl.textContent = user ? user.email : "로그인하지 않은 상태";
+
+      accountEl.textContent = user
+        ? user.email
+        : "로그인하지 않은 상태";
+
       statusEl.textContent = user
         ? "로그인 완료! 원하는 위치에 픽셀을 놓아 보세요."
         : "캔버스는 누구나 볼 수 있습니다. 픽셀을 놓으려면 로그인하세요.";
     });
 
     const pixelsQuery = query(collection(db, "pixels"), limit(10000));
+
     onSnapshot(pixelsQuery, (snapshot) => {
       pixelMap.clear();
+
       snapshot.forEach((item) => {
         const pixel = item.data();
+
         if (
-          Number.isInteger(pixel.x) && pixel.x >= 0 && pixel.x < 1000 &&
-          Number.isInteger(pixel.y) && pixel.y >= 0 && pixel.y < 1000 &&
+          Number.isInteger(pixel.x) &&
+          pixel.x >= 0 && pixel.x < 1000 &&
+          Number.isInteger(pixel.y) &&
+          pixel.y >= 0 && pixel.y < 1000 &&
           colors.includes(pixel.color)
         ) {
           pixelMap.set(item.id, pixel);
         }
       });
+
       drawBoard();
     }, (error) => {
-      statusEl.textContent = "픽셀 데이터를 읽을 수 없습니다. Firebase 규칙을 확인하세요.";
+      statusEl.textContent =
+        "픽셀 데이터를 읽을 수 없습니다. Firebase 규칙을 확인하세요.";
       console.error(error);
     });
 
@@ -320,24 +405,27 @@ canvasViewport.addEventListener("wheel", (event) => {
         return;
       }
 
-    const rect = canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
 
-const x = Math.floor(
-  (event.clientX - rect.left) / rect.width * canvas.width
-);
-const y = Math.floor(
-  (event.clientY - rect.top) / rect.height * canvas.height
-);
+      const x = Math.floor(
+        (event.clientX - rect.left) / rect.width * canvas.width
+      );
 
-if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
+      const y = Math.floor(
+        (event.clientY - rect.top) / rect.height * canvas.height
+      );
+
+      if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
 
       const pixelRef = doc(db, "pixels", `${x}_${y}`);
       const cooldownRef = doc(db, "cooldowns", currentUser.uid);
+
       showMessage("픽셀을 저장하는 중...");
 
       try {
         await runTransaction(db, async (transaction) => {
           const cooldownSnap = await transaction.get(cooldownRef);
+
           const previousTime = cooldownSnap.exists()
             ? cooldownSnap.data().lastPlacedAt?.toMillis?.() || 0
             : 0;
@@ -351,14 +439,20 @@ if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
           });
 
           transaction.set(pixelRef, {
-            x, y, color: selectedColor,
+            x,
+            y,
+            color: selectedColor,
             uid: currentUser.uid,
             updatedAt: serverTimestamp()
           });
         });
-        lastPlacedAt = Date.now();
+
+        cooldownNotice.textContent =
+          "한 계정당 60초에 한 번씩 픽셀을 놓을 수 있습니다.";
+        cooldownNotice.style.color = "#cbd5e1";
         showMessage("픽셀을 저장했어요!");
-           } catch (error) {
+
+      } catch (error) {
         console.error(error);
 
         if (error.message && error.message.includes("60초")) {
@@ -366,11 +460,14 @@ if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
           cooldownNotice.style.color = "red";
           showMessage("");
         } else {
-          showMessage(error.message || "저장에 실패했습니다. Firebase 보안 규칙을 확인하세요.");
+          showMessage(
+            error.message ||
+            "저장에 실패했습니다. Firebase 보안 규칙을 확인하세요."
+          );
         }
       }
-      
     });
   </script>
 </body>
 </html>
+
