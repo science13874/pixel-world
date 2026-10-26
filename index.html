@@ -6,16 +6,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111827">
   <title>Pixel World</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 20px 12px;
-      background: #111827;
-      color: #f9fafb;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+ 
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 20px 12px;
+  background: #111827;
+  color: #f9fafb;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 { margin: 10px 0; font-size: 34px; }
+.muted { color: #cbd5e1; }
+main { max-width: 760px; margin: auto; }
+
+.panel {
+  margin: 18px auto;
+  padding: 16px;
+  background: #1f2937;
+  border-radius: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 16px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:disabled { opacity: .5; cursor: not-allowed; }
+#status { margin: 12px; color: #a7f3d0; }
+
+#canvasViewport {
+  width: 100%;
+  max-width: 600px;
+  height: 600px;
+  margin: 16px auto;
+  overflow: auto;
+  background: #374151;
+  border: 2px solid #64748b;
+}
+
+#board {
+  display: block;
+  width: 1000px;
+  height: 1000px;
+  max-width: none;
+  margin: 0;
+  background: white;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+#palette {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px auto;
+}
+
+.swatch {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid #64748b;
+}
+
+.swatch.selected { outline: 3px solid white; outline-offset: 2px; }
+footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
+
     h1 { margin: 10px 0; font-size: 34px; }
     .muted { color: #cbd5e1; }
     main { max-width: 760px; margin: auto; }
@@ -81,8 +147,10 @@
     </section>
 
     <div id="palette" aria-label="16가지 색상"></div>
-    <canvas id="board" width="1000" height="1000"
-      aria-label="1000 곱하기 1000 픽셀 캔버스"></canvas>
+    <div id="canvasViewport">
+  <canvas id="board" width="1000" height="1000"
+    aria-label="1000 곱하기 1000 픽셀 캔버스"></canvas>
+</div>
     <p class="muted">색상을 고른 뒤 캔버스를 클릭하세요.</p>
     <p id="message" role="status"></p>
   </main>
