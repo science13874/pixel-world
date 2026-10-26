@@ -186,6 +186,34 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
 
     const canvas = document.getElementById("board");
     const ctx = canvas.getContext("2d");
+
+const canvasViewport = document.getElementById("canvasViewport");
+
+let zoom = 1;
+
+canvasViewport.addEventListener("wheel", (event) => {
+  event.preventDefault();
+
+  const oldZoom = zoom;
+  const factor = event.deltaY < 0 ? 1.25 : 0.8;
+  zoom = Math.max(1, Math.min(16, zoom * factor));
+
+  if (zoom === oldZoom) return;
+
+  const rect = canvasViewport.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left + canvasViewport.scrollLeft;
+  const mouseY = event.clientY - rect.top + canvasViewport.scrollTop;
+
+  const pointX = mouseX / oldZoom;
+  const pointY = mouseY / oldZoom;
+
+  canvas.style.width = `${1000 * zoom}px`;
+  canvas.style.height = `${1000 * zoom}px`;
+
+  canvasViewport.scrollLeft = pointX * zoom - (event.clientX - rect.left);
+  canvasViewport.scrollTop = pointY * zoom - (event.clientY - rect.top);
+}, { passive: false });
+    
     const statusEl = document.getElementById("status");
     const messageEl = document.getElementById("message");
     const loginBtn = document.getElementById("loginBtn");
@@ -292,16 +320,13 @@ footer { margin: 24px 0; color: #9ca3af; font-size: 13px; }
         return;
       }
 
-      const rect = canvas.getBoundingClientRect();
-
-const scaleX = canvas.width / rect.width;
-const scaleY = canvas.height / rect.height;
+    const rect = canvas.getBoundingClientRect();
 
 const x = Math.floor(
-  (event.clientX - rect.left - canvas.clientLeft) * scaleX
+  (event.clientX - rect.left) / rect.width * canvas.width
 );
 const y = Math.floor(
-  (event.clientY - rect.top - canvas.clientTop) * scaleY
+  (event.clientY - rect.top) / rect.height * canvas.height
 );
 
 if (x < 0 || x >= 1000 || y < 0 || y >= 1000) return;
